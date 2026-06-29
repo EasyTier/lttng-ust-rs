@@ -1,21 +1,33 @@
+use bindgen::Builder;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::path::PathBuf;
-use bindgen::Builder;
 
-use ::{EventClass, EventInstance, Field, Provider};
 use super::ctf_field_c_type;
+use {EventClass, EventInstance, Field, Provider};
 
-pub(in super) fn generate_interface_impl(path: &PathBuf,
-                                         providers: &[Provider],
-                                         interface_header: &PathBuf,
-                                         tracepoint_header: &PathBuf) -> io::Result<()> {
-    let mut outf = File::create(path)
-        .expect(&format!("Failed to create tracepoint interface implementation {:?}\n", path));
+pub(super) fn generate_interface_impl(
+    path: &PathBuf,
+    providers: &[Provider],
+    interface_header: &PathBuf,
+    tracepoint_header: &PathBuf,
+) -> io::Result<()> {
+    let mut outf = File::create(path).expect(&format!(
+        "Failed to create tracepoint interface implementation {:?}\n",
+        path
+    ));
 
-    write!(outf, "#include \"{}\"\n", interface_header.to_string_lossy())?;
-    write!(outf, "#include \"{}\"\n", tracepoint_header.to_string_lossy())?;
+    write!(
+        outf,
+        "#include \"{}\"\n",
+        interface_header.to_string_lossy()
+    )?;
+    write!(
+        outf,
+        "#include \"{}\"\n",
+        tracepoint_header.to_string_lossy()
+    )?;
 
     for provider in providers {
         generate_provider_impl(provider, &mut outf)?;
@@ -24,9 +36,11 @@ pub(in super) fn generate_interface_impl(path: &PathBuf,
     Ok(())
 }
 
-pub(in super) fn generate_interface_header(path: &PathBuf, providers: &[Provider]) -> io::Result<()> {
-    let mut outf = File::create(path)
-        .expect(&format!("Failed to create tracepoint interface header {:?}\n", path));
+pub(super) fn generate_interface_header(path: &PathBuf, providers: &[Provider]) -> io::Result<()> {
+    let mut outf = File::create(path).expect(&format!(
+        "Failed to create tracepoint interface header {:?}\n",
+        path
+    ));
 
     write!(outf, "#if !defined(_RUST_TRACEPOINT_INTERFACE)\n")?;
     write!(outf, "#define _RUST_TRACEPOINT_INTERFACE\n")?;
@@ -41,7 +55,7 @@ pub(in super) fn generate_interface_header(path: &PathBuf, providers: &[Provider
     Ok(())
 }
 
-pub(in super) fn whitelist_interface(providers: &[Provider], mut b: Builder) -> Builder {
+pub(super) fn whitelist_interface(providers: &[Provider], mut b: Builder) -> Builder {
     for provider in providers {
         for event_class in &provider.classes {
             for instance in &event_class.instances {
@@ -57,10 +71,18 @@ pub(in super) fn whitelist_interface(providers: &[Provider], mut b: Builder) -> 
 fn generate_provider_impl<F: Write>(provider: &Provider, outf: &mut F) -> io::Result<()> {
     for event_class in &provider.classes {
         for instance in &event_class.instances {
-            write!(outf, "void {}(", generate_func_name(provider, event_class, instance))?;
+            write!(
+                outf,
+                "void {}(",
+                generate_func_name(provider, event_class, instance)
+            )?;
             generate_c_args(&event_class.fields, outf, true)?;
             write!(outf, ") {{\n")?;
-            write!(outf, "    tracepoint({}, {}, ", provider.name, instance.name)?;
+            write!(
+                outf,
+                "    tracepoint({}, {}, ",
+                provider.name, instance.name
+            )?;
             generate_c_args(&event_class.fields, outf, false)?;
             write!(outf, ");\n")?;
             write!(outf, "}}\n\n")?;
@@ -73,7 +95,11 @@ fn generate_provider_impl<F: Write>(provider: &Provider, outf: &mut F) -> io::Re
 fn generate_provider_header<F: Write>(provider: &Provider, outf: &mut F) -> io::Result<()> {
     for event_class in &provider.classes {
         for instance in &event_class.instances {
-            write!(outf, "extern void {}(", generate_func_name(provider, event_class, instance))?;
+            write!(
+                outf,
+                "extern void {}(",
+                generate_func_name(provider, event_class, instance)
+            )?;
             generate_c_args(&event_class.fields, outf, true)?;
             write!(outf, ");\n")?;
         }
@@ -82,12 +108,14 @@ fn generate_provider_header<F: Write>(provider: &Provider, outf: &mut F) -> io::
     Ok(())
 }
 
-pub fn generate_func_name(provider: &Provider, event_class: &EventClass, instance: &EventInstance) -> String {
+pub fn generate_func_name(
+    provider: &Provider,
+    event_class: &EventClass,
+    instance: &EventInstance,
+) -> String {
     format!(
         "{}_{}_{}_tp",
-        provider.name,
-        event_class.class_name,
-        instance.name
+        provider.name, event_class.class_name, instance.name
     )
 }
 
@@ -101,7 +129,8 @@ fn generate_c_args<F: Write>(fields: &[Field], outf: &mut F, include_type: bool)
         }
         if include_type {
             write!(
-                outf, "{} {}_arg",
+                outf,
+                "{} {}_arg",
                 ctf_field_c_type(field.ctf_type),
                 field.name
             )?;

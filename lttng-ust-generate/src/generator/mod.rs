@@ -1,16 +1,18 @@
+use super::{CTFType, Provider};
 use bindgen::Builder;
 use cc;
 use std::env;
 use std::path::PathBuf;
-use super::{CTFType, Provider};
 
+mod rust_bindings;
 mod tracepoint_impl;
 mod tracepoint_interface;
-mod rust_bindings;
 
-use self::tracepoint_impl::{generate_tp_impl, generate_tp_header};
-use self::tracepoint_interface::{generate_interface_impl, generate_interface_header, whitelist_interface};
-use self::rust_bindings::{generate_rust_bindings};
+use self::rust_bindings::generate_rust_bindings;
+use self::tracepoint_impl::{generate_tp_header, generate_tp_impl};
+use self::tracepoint_interface::{
+    generate_interface_header, generate_interface_impl, whitelist_interface,
+};
 
 /// Encapsulates the logic for generating the C and Rust source files needed to realize your
 /// tracepoints
@@ -69,9 +71,15 @@ impl Generator {
         let bindings_file = generate_path.join("tracepoints.rs");
         builder
             .generate()
-            .expect(&format!("Failed to generate tracepoint bindings for {}", self.lib_name))
+            .expect(&format!(
+                "Failed to generate tracepoint bindings for {}",
+                self.lib_name
+            ))
             .write_to_file(&bindings_file)
-            .expect(&format!("Failed to write raw tracepoint bindings for {}", self.lib_name));
+            .expect(&format!(
+                "Failed to write raw tracepoint bindings for {}",
+                self.lib_name
+            ));
 
         // Generate pretty rust module
         generate_rust_bindings(&self.output_file_name, &self.providers, &bindings_file)
@@ -88,8 +96,7 @@ impl Generator {
     fn generate_c_sources(&self, generate_path: &PathBuf) {
         use std::fs;
         // Make sure the output directory exists
-        fs::create_dir_all(generate_path)
-            .expect("Failed to create source directory");
+        fs::create_dir_all(generate_path).expect("Failed to create source directory");
 
         // Generate and build C-language files
         let tp_hdr_pth = &self.tracepoint_header(&generate_path);
@@ -129,14 +136,13 @@ impl Generator {
 
 fn ctf_field_c_type(ty: CTFType) -> &'static str {
     match ty {
-        CTFType::Integer(i) |
-        CTFType::IntegerNoWrite(i) |
-        CTFType::IntegerHex(i) |
-        CTFType::IntegerNetwork(i) |
-        CTFType::IntegerNetworkHex(i) => i.c_type(),
+        CTFType::Integer(i)
+        | CTFType::IntegerNoWrite(i)
+        | CTFType::IntegerHex(i)
+        | CTFType::IntegerNetwork(i)
+        | CTFType::IntegerNetworkHex(i) => i.c_type(),
 
-        CTFType::Float(f) |
-        CTFType::FloatNoWrite(f) => f.c_type(),
+        CTFType::Float(f) | CTFType::FloatNoWrite(f) => f.c_type(),
 
         CTFType::String | CTFType::StringNoWrite => "const char *",
         CTFType::Array(i, _) | CTFType::ArrayNoWrite(i, _) => i.c_pointer_type(),

@@ -132,9 +132,7 @@ impl EventClass {
     /// Adds a new field to the tracepoint.
     /// See the [module level documentation](index.html) for examples.
     pub fn add_field<S: Into<String>>(&mut self, field_name: S, ty: CTFType) -> &mut Self {
-        self.fields.push(Field::new(
-            field_name.into(), ty
-        ));
+        self.fields.push(Field::new(field_name.into(), ty));
         // TODO: make sure field names don't conflict
         self
     }
@@ -149,15 +147,15 @@ impl EventClass {
 
     /// Instantiate the class, creating a new tracepoint.
     /// Also allows specification of the level
-    pub fn instantiate_with_level<S: Into<String>>(&mut self,
-                                                   instance_name: S,
-                                                   level: LogLevel) -> &mut Self {
+    pub fn instantiate_with_level<S: Into<String>>(
+        &mut self,
+        instance_name: S,
+        level: LogLevel,
+    ) -> &mut Self {
         // TODO: make sure instance names don't conflict.
         // This gets tricky because we can't conflict with any name in the parent provider's namespace.
-        self.instances.push(EventInstance::new(
-            instance_name.into(),
-            level
-        ));
+        self.instances
+            .push(EventInstance::new(instance_name.into(), level));
         self
     }
 }
@@ -170,9 +168,7 @@ pub struct Field {
 
 impl Field {
     fn new(name: String, ctf_type: CTFType) -> Self {
-        Self {
-            ctf_type, name,
-        }
+        Self { ctf_type, name }
     }
 }
 
@@ -185,9 +181,7 @@ pub struct EventInstance {
 
 impl EventInstance {
     fn new(name: String, level: LogLevel) -> Self {
-        EventInstance {
-            name, level,
-        }
+        EventInstance { name, level }
     }
 }
 
@@ -222,7 +216,7 @@ pub enum LogLevel {
     /// Corresponds to the `TRACE_DEBUG_LINE` log level
     DebugLine,
     /// Corresponds to the `TRACE_DEBUG` log level
-    Debug
+    Debug,
 }
 
 impl LogLevel {
@@ -249,39 +243,45 @@ impl LogLevel {
 }
 
 /// Represents a C integer type
-#[derive(Copy,Clone,PartialEq,Eq,Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[allow(missing_docs)]
 pub enum CIntegerType {
-    I8, I16, I32, I64,
-    U8, U16, U32, U64,
+    I8,
+    I16,
+    I32,
+    I64,
+    U8,
+    U16,
+    U32,
+    U64,
 }
 
 impl CIntegerType {
     /// String version of the C type this represents
     fn c_type(&self) -> &'static str {
         match *self {
-            CIntegerType::I8 =>   "int8_t",
-            CIntegerType::U8 =>  "uint8_t",
-            CIntegerType::I16 =>  "int16_t",
+            CIntegerType::I8 => "int8_t",
+            CIntegerType::U8 => "uint8_t",
+            CIntegerType::I16 => "int16_t",
             CIntegerType::U16 => "uint16_t",
-            CIntegerType::I32 =>  "int32_t",
+            CIntegerType::I32 => "int32_t",
             CIntegerType::U32 => "uint32_t",
-            CIntegerType::I64 =>  "int64_t",
-            CIntegerType::U64 => "uint64_t"
+            CIntegerType::I64 => "int64_t",
+            CIntegerType::U64 => "uint64_t",
         }
     }
 
     /// String version of the C type this represents as a pointer
     fn c_pointer_type(&self) -> &'static str {
         match *self {
-            CIntegerType::I8 =>   "const int8_t *",
-            CIntegerType::U8 =>  "const uint8_t *",
-            CIntegerType::I16 =>  "const int16_t *",
+            CIntegerType::I8 => "const int8_t *",
+            CIntegerType::U8 => "const uint8_t *",
+            CIntegerType::I16 => "const int16_t *",
             CIntegerType::U16 => "const uint16_t *",
-            CIntegerType::I32 =>  "const int32_t *",
+            CIntegerType::I32 => "const int32_t *",
             CIntegerType::U32 => "const uint32_t *",
-            CIntegerType::I64 =>  "const int64_t *",
-            CIntegerType::U64 => "const uint64_t *"
+            CIntegerType::I64 => "const int64_t *",
+            CIntegerType::U64 => "const uint64_t *",
         }
     }
 
@@ -301,10 +301,11 @@ impl CIntegerType {
 }
 
 /// Represents a C float type
-#[derive(Copy,Clone,PartialEq,Eq,Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[allow(missing_docs)]
 pub enum CFloatType {
-    Single, Double
+    Single,
+    Double,
 }
 
 impl CFloatType {
@@ -326,7 +327,7 @@ impl CFloatType {
 }
 
 /// Represents a CTF type
-#[derive(Copy,Clone,PartialEq,Eq,Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 
 pub enum CTFType {
     /// A standard base-10 integer.
@@ -402,10 +403,10 @@ pub enum CTFType {
 impl CTFType {
     fn is_sequence(&self) -> bool {
         match *self {
-            CTFType::Sequence(_) |
-            CTFType::SequenceNoWrite(_) |
-            CTFType::SequenceText |
-            CTFType::SequenceTextNoWrite => true,
+            CTFType::Sequence(_)
+            | CTFType::SequenceNoWrite(_)
+            | CTFType::SequenceText
+            | CTFType::SequenceTextNoWrite => true,
             _ => false,
         }
     }
